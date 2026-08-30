@@ -1,0 +1,11 @@
+**/*.map
+*.tsbuildinfo
+.DS_Store
+.dsh-uploads/
+preview.html
+preview-shots/
+src/
+test/
+docs/
+scripts/
+*.tgz
