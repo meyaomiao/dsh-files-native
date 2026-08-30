@@ -29,7 +29,7 @@
 |---|---|
 | ![拖入遮罩](screenshots/03-overlay.png) | ![发送后](screenshots/04-sent.png) |
 
-本地预览页（可切状态）：打开仓库里的 [`preview.html`](preview.html)。
+本地预览页（可切状态）：打开仓库里的 [`preview.html`](preview.html)。市场截图清单见 [`screenshots.json`](screenshots.json)。
 
 ## 入口
 
