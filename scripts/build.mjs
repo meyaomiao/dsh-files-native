@@ -11,7 +11,7 @@ await build({
   format: 'esm',
   platform: 'node',
   target: 'node20',
-  sourcemap: true,
+  sourcemap: false,
   packages: 'external',
 });
 
