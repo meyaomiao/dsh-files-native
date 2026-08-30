@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>file-native 样式预览</title>
+  <style>
+    :root, [data-theme="light"] {
+      --dsw-alias-bg-base: #f6f7f9;
+      --dsw-alias-bg-layer-1: #ffffff;
+      --dsw-alias-bg-layer-2: #f3f4f6;
+      --dsw-alias-label-primary: #1c1c1e;
+      --dsw-alias-label-secondary: #5c6370;
+      --dsw-alias-label-tertiary: #8b919c;
+      --dsw-alias-label-caption: #8b919c;
+      --dsw-alias-label-primary-inverted: #ffffff;
+      --dsw-alias-border-l1: #e6e8eb;
+      --dsw-alias-border-l2: #eceef1;
+      --dsw-alias-border-l4: #e2e5ea;
+      --dsw-alias-border-l2-darkmode-thin: #e6e8eb;
+      --dsw-alias-interactive-bg-hover: #f2f3f5;
+      --dsw-alias-button-contrast-fill: #1c1c1e;
+      --dsw-alias-bg-mask-drop: rgba(246,247,249,.72);
+      --dsw-specific-bubble: #4d6bfe;
+      --dsw-font-l-20: 600 20px/28px ui-sans-serif, system-ui;
+      --dsw-font-s-14: 14px/20px ui-sans-serif, system-ui;
+      --dsw-shadow-lv2: 0 8px 24px rgba(16,24,40,.08);
+    }
+    [data-theme="dark"] {
+      --dsw-alias-bg-base: #111315;
+      --dsw-alias-bg-layer-1: #1a1d21;
+      --dsw-alias-bg-layer-2: #22262b;
+      --dsw-alias-label-primary: #f2f4f7;
+      --dsw-alias-label-secondary: #b4bac4;
+      --dsw-alias-label-tertiary: #8b919c;
+      --dsw-alias-label-caption: #8b919c;
+      --dsw-alias-label-primary-inverted: #111315;
+      --dsw-alias-border-l1: #2c3138;
+      --dsw-alias-border-l2: #343a42;
+      --dsw-alias-border-l4: #3a414a;
+      --dsw-alias-border-l2-darkmode-thin: #3a414a;
+      --dsw-alias-interactive-bg-hover: #2a2f36;
+      --dsw-alias-button-contrast-fill: #f2f4f7;
+      --dsw-alias-bg-mask-drop: rgba(17,19,21,.72);
+      --dsw-specific-bubble: #4d6bfe;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+      background: var(--dsw-alias-bg-base);
+      color: var(--dsw-alias-label-primary);
+    }
+    .page { max-width: 880px; margin: 0 auto; padding: 28px 20px 80px; }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .lede { color: var(--dsw-alias-label-secondary); margin: 0 0 18px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .toolbar button {
+      appearance: none; border: 1px solid var(--dsw-alias-border-l1);
+      background: var(--dsw-alias-bg-layer-1); color: inherit; border-radius: 8px;
+      padding: 6px 10px; cursor: pointer; font: inherit;
+    }
+    .toolbar button:hover { background: var(--dsw-alias-interactive-bg-hover); }
+    .toolbar button[aria-pressed="true"] { border-color: #4d6bfe; color: #4d6bfe; }
+    .shell {
+      background: var(--dsw-alias-bg-layer-1);
+      border: 1px solid var(--dsw-alias-border-l1);
+      border-radius: 16px;
+      box-shadow: var(--dsw-shadow-lv2);
+      overflow: hidden;
+      min-height: 520px;
+      display: flex; flex-direction: column;
+    }
+    .chat { flex: 1; padding: 20px 22px 12px; display: flex; flex-direction: column; gap: 14px; }
+    .bubble {
+      align-self: flex-end; max-width: 72%;
+      background: color-mix(in srgb, var(--dsw-specific-bubble) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--dsw-specific-bubble) 30%, transparent);
+      border-radius: 16px 4px 16px 16px; padding: 8px 12px;
+    }
+    .assistant { align-self: stretch; color: var(--dsw-alias-label-primary); }
+    .composer {
+      margin: 8px 16px 16px; border: 1px solid var(--dsw-alias-border-l1);
+      border-radius: 16px; background: var(--dsw-alias-bg-layer-1); padding: 8px 10px 8px;
+    }
+    .tools { display: flex; align-items: center; gap: 6px; }
+    .draft {
+      flex: 1; min-height: 40px; border: none; outline: none; background: transparent;
+      color: inherit; font: inherit; resize: none; padding: 8px 6px;
+    }
+    .send {
+      width: 32px; height: 32px; border: none; border-radius: 50%;
+      background: #4d6bfe; color: #fff; cursor: pointer;
+    }
+    .gap-note {
+      margin-top: 18px; padding: 12px 14px; border-radius: 12px;
+      background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 13px;
+    }
+    .gap-note b { color: var(--dsw-alias-label-primary); }
+    .photo {
+      width: 64px; height: 64px; display: block;
+      background:
+        radial-gradient(circle at 30% 30%, #9ce5ed, transparent 42%),
+        linear-gradient(135deg, #4d6bfe, #8ab4ff);
+    }
+
+    /* ===== 插件 CSS 原样 ===== */
+    .fr-rail{min-width:0;position:relative;padding:0 0 8px}
+    .fr-row{scrollbar-width:none;gap:10px;display:flex;overflow:auto hidden;padding:2px 0;align-items:stretch}
+    .fr-row::-webkit-scrollbar{display:none}
+    .fr-item{flex:none;height:64px;position:relative}
+    .fr-item-image{flex:0 0 64px;width:64px}
+    .fr-thumb{border:1px solid var(--dsw-alias-border-l2-darkmode-thin, var(--dsw-alias-border-l4));
+      background:var(--dsw-alias-interactive-bg-hover);cursor:zoom-in;border-radius:16px;width:64px;height:64px;
+      padding:0;overflow:hidden}
+    .fr-thumb img,.fr-thumb .photo{object-fit:cover;width:100%;height:100%;display:block}
+    .fr-card{border:1px solid var(--dsw-alias-border-l2-darkmode-thin, var(--dsw-alias-border-l4));
+      background:var(--dsw-alias-interactive-bg-hover);border-radius:16px;height:64px;min-width:168px;max-width:240px;
+      padding:8px 28px 8px 10px;display:flex;align-items:center;gap:10px;cursor:default}
+    .fr-card[data-status="error"]{border-color:#d94c4c}
+    .fr-ext{font:11px/14px ui-sans-serif,system-ui;font-weight:700;letter-spacing:.3px;
+      color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);
+      border-radius:8px;padding:6px 7px;line-height:1;flex:none;min-width:36px;text-align:center}
+    .fr-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+    .fr-name{font:13px/18px ui-sans-serif,system-ui;color:var(--dsw-alias-label-primary);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px}
+    .fr-meta{font:11px/14px ui-sans-serif,system-ui;color:var(--dsw-alias-label-caption)}
+    .fr-remove{z-index:1;background:var(--dsw-alias-button-contrast-fill);width:18px;height:18px;
+      color:var(--dsw-alias-label-primary-inverted);cursor:pointer;opacity:0;border:none;border-radius:50%;
+      place-items:center;padding:0;transition:opacity .2s ease-in-out;display:grid;position:absolute;top:4px;right:4px}
+    .fr-item:hover .fr-remove,.fr-remove:focus-visible{opacity:1}
+    .fr-arrow{z-index:2;border:1px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);
+      width:24px;height:24px;color:var(--dsw-alias-label-secondary);box-shadow:var(--dsw-shadow-lv2);
+      cursor:pointer;border-radius:999px;place-items:center;padding:0;display:grid;position:absolute;top:50%;transform:translateY(-50%)}
+    .fr-arrow-right{right:4px}
+    .fr-mask[hidden], .fr-lightbox[hidden] { display: none !important; }
+    .fr-mask{z-index:1000;pointer-events:none;background-color:var(--dsw-alias-bg-mask-drop);
+      backdrop-filter:blur(10px);justify-content:center;align-items:center;animation:.16s ease-out fr-fade-in;
+      display:flex;position:fixed;inset:0}
+    @keyframes fr-fade-in{0%{opacity:0}to{opacity:1}}
+    .fr-wrap{color:var(--dsw-alias-label-primary);text-align:center;flex-direction:column;align-items:center;
+      margin-top:-3%;padding:0 40px;display:flex}
+    .fr-title{font:var(--dsw-font-l-20);margin-top:16px}
+    .fr-desc{font:var(--dsw-font-s-14);color:var(--dsw-alias-label-tertiary);white-space:pre-wrap;margin-top:16px}
+    .fr-illust{width:115px;height:84px}
+    .fr-pick{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;
+      background:transparent;color:var(--dsw-alias-label-secondary);border-radius:8px;cursor:pointer;padding:0}
+    .fr-pick:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+    .fr-lightbox{z-index:1100;position:fixed;inset:0;background:rgba(0,0,0,.72);place-items:center;cursor:zoom-out}
+    .fr-lightbox:not([hidden]){display:grid}
+    .fr-lightbox .photo{width:min(72vw,640px);height:min(48vh,360px);border-radius:12px}
+    .fr-tail{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:4px 8px;margin-top:16px;
+      font-size:13px;line-height:22px}
+    .fr-tail-label{color:var(--dsw-alias-label-tertiary);grid-column:1}
+    .fr-tail-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;grid-column:2}
+    .fr-chip{text-overflow:ellipsis;white-space:nowrap;background:var(--dsw-alias-interactive-bg-hover);max-width:320px;
+      color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;border:none;border-radius:6px;flex:none;
+      margin:0;padding:0 8px;overflow:hidden}
+    .fr-chip:hover{color:var(--dsw-alias-label-primary);text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>file-native 样式预览</h1>
+    <p class="lede">横条文件卡 + 官方回形针/遮罩插图。点缩略图开灯箱；拖文件进页面出遮罩。</p>
+    <div class="toolbar">
+      <button id="theme" type="button">切换深色</button>
+      <button id="overlay" type="button" aria-pressed="false">显示拖入遮罩</button>
+      <button id="empty" type="button">空轨</button>
+      <button id="mixed" type="button" aria-pressed="true">混排附件</button>
+      <button id="tail" type="button" aria-pressed="true">回合尾巴</button>
+    </div>
+
+    <div class="shell" id="shell">
+      <div class="chat">
+        <div class="bubble">帮我看下这份 PDF 和截图。</div>
+        <div id="user-tail">
+          <div class="fr-tail">
+            <span class="fr-tail-label">附件</span>
+            <div class="fr-tail-row">
+              <button type="button" class="fr-chip" title=".dsh-uploads/spec.pdf">spec.pdf</button>
+              <button type="button" class="fr-chip" title="截图.png">截图.png</button>
+            </div>
+          </div>
+        </div>
+        <div class="assistant">
+          已读完 spec.pdf。我把修订写进 <code>out/notes.md</code>。
+          <div class="fr-tail">
+            <span class="fr-tail-label">产物</span>
+            <div class="fr-tail-row">
+              <button type="button" class="fr-chip">out/notes.md</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="composer">
+        <div class="fr-rail" id="rail">
+          <div style="position:relative">
+            <div class="fr-row" role="group" aria-label="附件">
+              <div class="fr-item fr-item-image">
+                <button type="button" class="fr-thumb" title="截图.png" id="open-light"><span class="photo"></span></button>
+                <button type="button" class="fr-remove" aria-label="移除">×</button>
+              </div>
+              <div class="fr-item" title="spec.pdf">
+                <div class="fr-card">
+                  <span class="fr-ext">PDF</span>
+                  <span class="fr-copy"><span class="fr-name">spec.pdf</span><span class="fr-meta">1.2 MB</span></span>
+                </div>
+                <button type="button" class="fr-remove">×</button>
+              </div>
+              <div class="fr-item" title="上传中">
+                <div class="fr-card">
+                  <span class="fr-ext">XLSX</span>
+                  <span class="fr-copy"><span class="fr-name">budget.xlsx</span><span class="fr-meta">上传中…</span></span>
+                </div>
+                <button type="button" class="fr-remove">×</button>
+              </div>
+              <div class="fr-item" title="超过 50 MB">
+                <div class="fr-card" data-status="error">
+                  <span class="fr-ext">ZIP</span>
+                  <span class="fr-copy"><span class="fr-name">dump.zip</span><span class="fr-meta">超过 50 MB</span></span>
+                </div>
+                <button type="button" class="fr-remove">×</button>
+              </div>
+            </div>
+            <button type="button" class="fr-arrow fr-arrow-right" aria-label="向右">›</button>
+          </div>
+        </div>
+        <div class="tools">
+          <button type="button" class="fr-pick" title="上传文件" aria-label="上传文件">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9.2 4.4 4.55 9.05a2.4 2.4 0 1 0 3.4 3.4l5.15-5.15a3.6 3.6 0 0 0-5.1-5.1L3.15 7.05" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <textarea class="draft" placeholder="问点什么…"></textarea>
+          <button class="send" type="button" aria-label="发送">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-note">
+      <b>这版已改</b>：64px 高可读横条文件卡、线标回形针、点缩略图灯箱、官方倾斜照片遮罩、溢出箭头、回复结尾附件+产物 chip。
+    </div>
+  </div>
+
+  <div class="fr-mask" id="mask" hidden>
+    <div class="fr-wrap">
+      <svg class="fr-illust" viewBox="0 0 115 84" fill="none" aria-hidden="true">
+        <g clip-path="url(#frDropClip)">
+          <rect y="17.0742" width="44.1832" height="43.6431" rx="12" transform="rotate(-22.7338 0 17.0742)" fill="#9CE5ED"></rect>
+          <rect x="73.4043" y="8.54297" width="43.7267" height="50.5284" rx="8" transform="rotate(17.403 73.4043 8.54297)" fill="#679EFE"></rect>
+          <path d="M30.4917 28.1369L40.8865 33.4564L37.2232 34.9524L29.5302 31.0159L26.7919 39.2122L23.1285 40.7082L26.8287 29.6338L16.8967 24.5516L20.5601 23.0556L27.7902 26.7549L30.3639 19.052L34.0273 17.556L30.4917 28.1369Z" fill="white"></path>
+          <path d="M77.5088 26.3047L101.057 33.7966" stroke="white" stroke-width="3"></path>
+          <path d="M72.2646 42.7871L86.3938 47.2823" stroke="white" stroke-width="3"></path>
+          <path d="M74.8867 34.5469L98.4353 42.0388" stroke="white" stroke-width="3"></path>
+          <rect x="31.583" y="38.6641" width="44.9157" height="44.3666" rx="12" transform="rotate(-0.134233 31.583 38.6641)" fill="#3964FE"></rect>
+          <path d="M38.9521 73.0337C39.6129 71.7086 41.7113 66.0937 43.5113 61.1663C44.1607 59.3885 46.7484 59.3923 47.4591 61.1465C48.9728 64.8828 50.7969 68.6922 51.9988 69.1925C54.2946 70.1482 57.9854 59.3573 68.0064 70.1801" stroke="white" stroke-width="3"></path>
+          <circle cx="60.6157" cy="52.247" r="4.38794" transform="rotate(22.5996 60.6157 52.247)" fill="white"></circle>
+        </g>
+        <defs><clipPath id="frDropClip"><rect width="115" height="84" fill="white"></rect></clipPath></defs>
+      </svg>
+      <div class="fr-title">松开以添加文件</div>
+      <div class="fr-desc">图片进入草稿图栏，其它文件保存到工作区</div>
+    </div>
+  </div>
+  <div class="fr-lightbox" id="lightbox" hidden>
+    <span class="photo"></span>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const mask = document.getElementById('mask');
+    const rail = document.getElementById('rail');
+    const tail = document.getElementById('user-tail');
+    const themeBtn = document.getElementById('theme');
+    const overlayBtn = document.getElementById('overlay');
+    document.getElementById('theme').onclick = () => {
+      html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      themeBtn.textContent = html.dataset.theme === 'dark' ? '切换浅色' : '切换深色';
+    };
+    overlayBtn.onclick = () => {
+      const on = mask.hidden;
+      mask.hidden = !on;
+      overlayBtn.setAttribute('aria-pressed', String(on));
+    };
+    document.getElementById('empty').onclick = () => { rail.hidden = true; };
+    document.getElementById('mixed').onclick = () => { rail.hidden = false; };
+    document.getElementById('tail').onclick = () => {
+      tail.hidden = !tail.hidden;
+      document.getElementById('tail').setAttribute('aria-pressed', String(!tail.hidden));
+    };
+    window.addEventListener('dragenter', (e) => { e.preventDefault(); mask.hidden = false; overlayBtn.setAttribute('aria-pressed', 'true'); });
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => { e.preventDefault(); mask.hidden = true; overlayBtn.setAttribute('aria-pressed', 'false'); rail.hidden = false; });
+    window.addEventListener('dragleave', (e) => {
+      if (e.clientX <= 0 || e.clientY <= 0) { mask.hidden = true; overlayBtn.setAttribute('aria-pressed', 'false'); }
+    });
+    document.querySelectorAll('.fr-remove').forEach((btn) => {
+      btn.addEventListener('click', () => btn.parentElement?.remove());
+    });
+    const params = new URLSearchParams(location.search);
+    if (params.get('theme') === 'dark') {
+      html.dataset.theme = 'dark';
+      themeBtn.textContent = '切换浅色';
+    }
+    if (params.get('overlay') === '1') {
+      mask.hidden = false;
+      overlayBtn.setAttribute('aria-pressed', 'true');
+    }
+    const lightbox = document.getElementById('lightbox');
+    document.getElementById('open-light')?.addEventListener('click', () => { lightbox.hidden = false; });
+    lightbox?.addEventListener('click', () => { lightbox.hidden = true; });
+  </script>
+</body>
+</html>

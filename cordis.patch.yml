@@ -1,0 +1,6 @@
+# dsh-files-native:接近原生质感的附件上传。
+# 运行时插件 id 仍为 file-native(上传路由 /plugins/file-native/*、notice.plugin)。
+# 图片走官方草稿图;其它文件落到会话工作区 .dsh-uploads/,发送时把相对路径交给模型。
+- insert:
+    - id: file-native
+      name: dsh-files-native
