@@ -41,7 +41,8 @@
     "lib",
     "cordis.patch.yml",
     "LICENSE",
-    "screenshots"
+    "screenshots",
+    "screenshots.json"
   ],
   "license": "MIT",
   "scripts": {
