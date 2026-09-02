@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Compatible with DeepSeek Harness `0.1.2-alpha.4` (also `0.1.1-rc.2`).
+- Drop `@deepseek-ai/dsh-client-runtime` from `dsh.client.inject` — that package was removed in DSH 0.1.2-alpha.1. Client still loads after `dsh-client-ui-conversation` so slot names stay valid.
+
 ## 0.1.0
 
 - Mixed composer rail: official PNG/JPEG/WebP/GIF thumbs plus 64px cards for other files.

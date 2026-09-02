@@ -1,7 +1,7 @@
 {
   "name": "dsh-files-native",
   "description": "DSH 插件:接近原生质感的附件上传——拖入/粘贴/回形针,图片缩略图与文件卡片混排在官方附件栏",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -31,7 +31,6 @@
     },
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
         "@deepseek-ai/dsh-client-ui-conversation"
       ],
       "platform": "web"

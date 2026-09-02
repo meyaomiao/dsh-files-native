@@ -78,3 +78,8 @@ dsh plugin --profile web add .
 - 单文件 50 MB，单批 20 个。
 - 上传路由仅 loopback。
 - 刷新会丢掉「已上传未发送」的文件卡（磁盘文件仍在 `.dsh-uploads/`）。
+
+## 兼容性
+
+- DeepSeek Harness `0.1.1-rc.2` 与 `0.1.2-alpha.4`（web profile）
+- 不要和 `dsh-file-fix` / `dsh-file-upload` / `dsh-paste-to-path` 叠装
