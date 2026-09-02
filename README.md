@@ -4,6 +4,7 @@
 
 **给 [DeepSeek Harness](https://github.com/deepseek-ai) 接近原生质感的附件上传：拖入 / 粘贴 / 回形针，图片缩略图与文件卡混排在官方输入框同一条轨。**
 
+[![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 [![dsh-plugin](https://img.shields.io/badge/dsh-plugin-4d6bfe)](https://github.com/topics/dsh-plugin)
 [![npm](https://img.shields.io/npm/v/dsh-files-native)](https://www.npmjs.com/package/dsh-files-native)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
