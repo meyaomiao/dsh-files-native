@@ -1,4 +1,4 @@
-/** 待发文件用全局列表:不按 sessionId 分桶,避免拦截写入 A、附件栏读 B 导致卡片空白。 */
+/** 待发文件按 sessionId 过滤再画轨;写入仍是一份列表,避免拦截与栏用两套桶。 */
 
 import type { RailFile } from './lib.ts';
 
@@ -33,9 +33,15 @@ export function pending(): readonly RailItem[] {
   return items.slice();
 }
 
-/** @deprecated 兼容旧调用,现在忽略 sessionId,返回全部待发。 */
-export function list(_sessionId?: string): readonly RailItem[] {
-  return items.slice();
+/** 当前会话的待发卡。切会话后只画这一份,上一会话没发完的不跟过来。 */
+export function pendingFor(sessionId: string): readonly RailItem[] {
+  return items.filter((item) => item.sessionId === sessionId);
+}
+
+/** @deprecated 请用 pendingFor;无 sessionId 时回退到全部待发。 */
+export function list(sessionId?: string): readonly RailItem[] {
+  if (sessionId === undefined || sessionId === '') return items.slice();
+  return pendingFor(sessionId);
 }
 
 export function add(sessionId: string, item: Omit<RailItem, 'sessionId'> & { sessionId?: string }): void {

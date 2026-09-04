@@ -30,4 +30,28 @@ describe('archiveIfNoticeMatches', () => {
     }]).length, 1);
     assert.equal(store.pending().some((item) => item.id === 'a'), false);
   });
+
+  it('pendingFor 只返回当前会话的待发卡', () => {
+    const a = `session-a-${Date.now()}`;
+    const b = `session-b-${Date.now()}`;
+    store.add(a, {
+      id: `${a}-item`,
+      name: 'a.txt',
+      relPath: '.dsh-uploads/a.txt',
+      size: 1,
+      mediaType: 'text/plain',
+      status: 'done',
+    });
+    store.add(b, {
+      id: `${b}-item`,
+      name: 'b.pdf',
+      relPath: '',
+      size: 2,
+      mediaType: 'application/pdf',
+      status: 'uploading',
+    });
+    assert.deepEqual(store.pendingFor(a).map((item) => item.name), ['a.txt']);
+    assert.deepEqual(store.pendingFor(b).map((item) => item.name), ['b.pdf']);
+    assert.equal(store.pendingFor('other').length, 0);
+  });
 });

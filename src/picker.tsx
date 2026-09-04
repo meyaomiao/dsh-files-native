@@ -7,7 +7,7 @@ import { intakeFiles } from './rail.tsx';
 import { IconPaperclip } from './icons.tsx';
 import { DropMask } from './overlay.tsx';
 import { ComposerRail } from './rail-portal.tsx';
-import { currentSessionId, getDragDepth, getLiveOwner, rememberSessionId, subscribeLive } from './live.ts';
+import { addImages, currentSessionId, getDragDepth, rememberSessionId, subscribeLive } from './live.ts';
 
 export function PaperclipButton(props: { sessionId?: string }): ReactElement {
   ensureStyles();
@@ -20,10 +20,9 @@ export function PaperclipButton(props: { sessionId?: string }): ReactElement {
   const onChange = (event: { currentTarget: HTMLInputElement }): void => {
     const files = Array.from(event.currentTarget.files ?? []);
     event.currentTarget.value = '';
-    const live = getLiveOwner();
-    const sid = String(props.sessionId || live?.sessionId || currentSessionId());
+    const sid = String(props.sessionId || currentSessionId());
     if (files.length === 0) return;
-    intakeFiles(sid, files, live?.onAddImages ?? (() => {}));
+    intakeFiles(sid, files, (images) => addImages(sid, images));
   };
 
   return h('span', null,

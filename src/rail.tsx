@@ -105,9 +105,10 @@ function ImageTile({ item, onRemove, onOpen }: { item: DraftImage; onRemove: () 
 
 function FileTile({ item, sessionId }: { item: RailItem; sessionId: string }): ReactElement {
   const remove = (): void => {
-    store.remove(sessionId, item.id);
+    const sid = item.sessionId || sessionId;
+    store.remove(sid, item.id);
     if (item.relPath) {
-      void fetch(`/plugins/file-native/remove?sessionId=${encodeURIComponent(sessionId)}&path=${encodeURIComponent(item.relPath)}`, { method: 'POST' });
+      void fetch(`/plugins/file-native/remove?sessionId=${encodeURIComponent(sid)}&path=${encodeURIComponent(item.relPath)}`, { method: 'POST' });
     }
   };
   const meta = item.status === 'uploading' ? '上传中…' : item.status === 'error' ? (item.error ?? '失败') : formatSize(item.size);
@@ -126,7 +127,7 @@ function FileTile({ item, sessionId }: { item: RailItem; sessionId: string }): R
 export function FileRail(props: AttachmentsOwner & { sessionId?: string }): ReactElement | null {
   ensureStyles();
   const sessionId = String(props.sessionId ?? '');
-  const [files, setFiles] = useState<readonly RailItem[]>(() => store.pending());
+  const [files, setFiles] = useState<readonly RailItem[]>(() => store.pendingFor(sessionId));
   const [, setVersion] = useState(() => store.version());
   const [preview, setPreview] = useState<DraftImage | null>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
@@ -135,12 +136,12 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
 
   useEffect(() => {
     const sync = (): void => {
-      setFiles(store.pending());
+      setFiles(store.pendingFor(sessionId));
       setVersion(store.version());
     };
     sync();
     return store.subscribe(sync);
-  }, []);
+  }, [sessionId]);
 
   const updateEdges = (): void => {
     const el = rowRef.current;
@@ -150,7 +151,8 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
     setEdges((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
   };
 
-  const itemCount = props.attachments.length + files.length;
+  const visibleFiles = files.filter((item) => item.sessionId === sessionId);
+  const itemCount = props.attachments.length + visibleFiles.length;
   useLayoutEffect(() => {
     const grew = countRef.current !== 0 && itemCount > countRef.current;
     countRef.current = itemCount;
@@ -188,7 +190,7 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
   };
 
   const hasImages = props.attachments.length > 0;
-  const hasFiles = files.length > 0;
+  const hasFiles = visibleFiles.length > 0;
   if (!hasImages && !hasFiles) return null;
 
   return h('div', { className: 'fr-rail', 'data-file-native': true },
@@ -201,7 +203,7 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
           onRemove: () => props.onRemoveImage(item.id),
           onOpen: () => setPreview(item),
         })),
-        ...files.map((item) => h(FileTile, { key: item.id, item, sessionId })),
+        ...visibleFiles.map((item) => h(FileTile, { key: item.id, item, sessionId })),
       ),
       edges.right ? h('button', { type: 'button', className: 'fr-arrow fr-arrow-right', 'aria-label': '向右', onClick: () => page(1) }, h(IconChevronRight)) : null,
     ),
