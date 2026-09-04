@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir, readFile, rm } from 'node:fs/promises';
 
 await rm('lib', { recursive: true, force: true });
 await mkdir('lib', { recursive: true });
@@ -15,8 +15,9 @@ await build({
   packages: 'external',
 });
 
+const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const banner = [
-  'window.__ModuleLoader__.load({ id: "dsh-files-native", factory: (require) => {',
+  `window.__ModuleLoader__.load({ id: ${JSON.stringify(pkg.name)}, factory: (require) => {`,
   'var module = { exports: {} };',
   'var exports = module.exports;',
 ].join('\n');
