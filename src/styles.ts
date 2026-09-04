@@ -47,9 +47,9 @@ export const FR_CSS = `
 .fr-title{font:var(--dsw-font-l-20, 600 20px/28px system-ui);margin-top:16px}
 .fr-desc{font:var(--dsw-font-s-14, 14px/20px system-ui);color:var(--dsw-alias-label-tertiary);white-space:pre-wrap;margin-top:16px}
 .fr-illust{width:115px;height:84px}
-.fr-pick{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;
-  background:transparent;color:var(--dsw-alias-label-secondary);border-radius:8px;cursor:pointer;padding:0}
-.fr-pick:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.fr-pick{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:transparent;
+  border:none;border-radius:999px;flex:none;place-items:center;display:grid;padding:0}
+.fr-pick:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .fr-hidden{display:none}
 .fr-lightbox{z-index:1100;position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;cursor:zoom-out}
 .fr-lightbox img{max-width:min(92vw,1200px);max-height:88vh;border-radius:12px;box-shadow:var(--dsw-shadow-lv2)}
