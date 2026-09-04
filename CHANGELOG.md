@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Compatible with DeepSeek Harness `0.1.2-rc.1` (also `0.1.1-rc.2` / `0.1.2-alpha.4`).
+- Paperclip button matches native composer icon chrome (28×28, full-round).
+- Test gate: ModuleLoader client id and cordis.patch.yml insert.name must equal package.json name.
+
 ## 0.1.1
 
 - Compatible with DeepSeek Harness `0.1.2-alpha.4` (also `0.1.1-rc.2`).
