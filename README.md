@@ -83,3 +83,5 @@ dsh plugin --profile web add .
 
 - DeepSeek Harness `0.1.1-rc.2` 与 `0.1.2-alpha.4`（web profile）
 - 不要和 `dsh-file-fix` / `dsh-file-upload` / `dsh-paste-to-path` 叠装
+
+改仓库前先读 [CONTRIBUTING.md](./CONTRIBUTING.md)（Issue → 分支 → Draft PR）。思考原则见 [AI-ISSUE-WORKFLOW.md](./AI-ISSUE-WORKFLOW.md)。插件硬约束见 [AGENTS.md](./AGENTS.md)。
