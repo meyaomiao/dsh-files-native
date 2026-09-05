@@ -3,7 +3,7 @@
  * 拖入拦截在 apply 时即安装。会话 id 只读 InputZone 快照,绝不调用 useSession/useInput。
  */
 
-import { createElement as h, useEffect, useRef } from 'react';
+import { createElement as h, useEffect, useLayoutEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import { intakeFiles } from './rail.tsx';
 import { PaperclipButton } from './picker.tsx';
@@ -12,7 +12,7 @@ import { ContextNodeView } from './context.tsx';
 import * as store from './store.ts';
 import { ensureStyles } from './styles.ts';
 import { installFileIntercept } from './intercept.ts';
-import { currentSessionId, getLiveOwner, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
+import { addImages, clearLiveOwner, currentSessionId, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
 import type { AttachmentsOwner, ClientCtx } from './types.ts';
 
 const name = 'file-native';
@@ -22,15 +22,19 @@ const inject = ['slots'];
 function RailSlot(props: AttachmentsOwner & { sessionId?: string }): ReactElement | null {
   ensureStyles();
   const sessionId = resolveSessionId(props);
-  setLiveOwner({
-    attachments: props.attachments,
-    canAcceptDrop: props.canAcceptDrop,
-    onAddImages: props.onAddImages,
-    onRemoveImage: props.onRemoveImage,
-    sessionId,
-    dropLimits: props.dropLimits,
-  });
-  useEffect(() => () => setLiveOwner(null), []);
+  rememberSessionId(sessionId);
+  const tokenRef = useRef(0);
+  useLayoutEffect(() => {
+    tokenRef.current = setLiveOwner({
+      attachments: props.attachments,
+      canAcceptDrop: props.canAcceptDrop,
+      onAddImages: props.onAddImages,
+      onRemoveImage: props.onRemoveImage,
+      sessionId,
+      dropLimits: props.dropLimits,
+    });
+  }, [sessionId, props.attachments, props.canAcceptDrop, props.onAddImages, props.onRemoveImage, props.dropLimits]);
+  useLayoutEffect(() => () => clearLiveOwner(tokenRef.current), []);
   return null;
 }
 
@@ -87,10 +91,8 @@ function installLiveIntercept(): () => void {
     canAccept: () => true,
     onDepth: (depth) => setDragDepth(depth),
     onFiles: (files) => {
-      const live = getLiveOwner();
-      const sessionId = live?.sessionId || currentSessionId();
-      const addImages = live?.onAddImages ?? (() => {});
-      intakeFiles(sessionId, files, addImages);
+      const sessionId = currentSessionId();
+      intakeFiles(sessionId, files, (images) => addImages(sessionId, images));
     },
   });
 }
