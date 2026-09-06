@@ -4,8 +4,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { createWriteStream } from 'node:fs';
-import { mkdir, rename, rm, stat } from 'node:fs/promises';
+import { appendFileSync, createWriteStream, mkdirSync } from 'node:fs';
+import { mkdir, readFile, rename, rm, stat } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
@@ -41,6 +41,8 @@ interface HostCtx {
 
 const pending = new Map<string, RailFile[]>();
 const lastSent = new Map<string, RailFile[]>();
+/** 已武装会话:下一条消息的 pre-step 注入当前 pending 文件(提交瞬间由客户端设置)。 */
+const armed = new Set<string>();
 
 function sessionCwd(ctx: HostCtx, sessionId: string, clientCwd?: string): string {
   const headerCwd = ctx.sessions.get(sessionId)?.header?.cwd;
@@ -181,10 +183,66 @@ function registerRoutes(ctx: HostCtx, webServer: NonNullable<HostCtx['webServer'
     },
   });
 
+  // 武装:客户端在提交瞬间调用,标记「下一条消息的 pre-step 注入当前 pending 文件」。
+  // 一次性消费;忙时排队不调用,排队消息自然不带文件。
+  const arm = webServer.register({
+    kind: 'exact',
+    path: '/plugins/file-native/arm',
+    handler: (req, res) => {
+      if (!isLoopback(req)) return json(res, 403, { ok: false, error: 'forbidden' });
+      if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'method' });
+      const sessionId = query(req).get('sessionId') ?? '';
+      if (sessionId === '') return json(res, 400, { ok: false, error: 'sessionId' });
+      armed.add(sessionId);
+      json(res, 200, { ok: true });
+    },
+  });
+
+  // 对话区文件卡「新页签打开」:按扩展名给 Content-Type,文本/图片/PDF 页签内展示,
+  // 二进制(office/zip 等)浏览器自动下载(=本地打开)。
+  const file = webServer.register({
+    kind: 'exact',
+    path: '/plugins/file-native/file',
+    handler: async (req, res) => {
+      if (!isLoopback(req)) return json(res, 403, { ok: false, error: 'forbidden' });
+      if (req.method !== 'GET') return json(res, 405, { ok: false, error: 'method' });
+      const q = query(req);
+      const sessionId = q.get('sessionId') ?? '';
+      const relPath = q.get('path') ?? '';
+      if (sessionId === '' || !isSafeRelPath(relPath)) return json(res, 400, { ok: false, error: 'bad-path' });
+      try {
+        const cwd = sessionCwd(ctx, sessionId);
+        const abs = resolve(cwd, relPath);
+        const info = await stat(abs);
+        if (!info.isFile()) throw new Error('not-file');
+        const bytes = await readFile(abs);
+        const ext = relPath.split('.').pop()?.toLowerCase() ?? '';
+        const types: Record<string, string> = {
+          md: 'text/markdown; charset=utf-8', txt: 'text/plain; charset=utf-8',
+          json: 'application/json; charset=utf-8', csv: 'text/csv; charset=utf-8',
+          pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+          gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml',
+          html: 'text/html; charset=utf-8', xml: 'application/xml',
+        };
+        const name = relPath.replace(/^.*[/\\]/, '');
+        res.writeHead(200, {
+          'content-type': types[ext] ?? 'application/octet-stream',
+          'content-length': String(bytes.length),
+          'content-disposition': `inline; filename*=UTF-8''${encodeURIComponent(name)}`,
+        });
+        res.end(bytes);
+      } catch {
+        json(res, 404, { ok: false, error: 'not-found' });
+      }
+    },
+  });
+
   return () => {
     upload();
     remove();
     last();
+    arm();
+    file();
   };
 }
 
@@ -224,20 +282,29 @@ export function apply(ctx: HostCtx): void {
     if (decision?.kind === 'reject') return decision;
     const agent = (payload as { agent?: { id?: unknown } }).agent;
     const sessionId = String(agent?.id ?? '');
+    // 辅助 step(标题/摘要生成等)的消息列表为空:绝不能取 pending,否则附件被吞、
+    // 正式消息(如排队消息)开跑时 pending 已空,附件静默丢失。
+    if (!Array.isArray(decision.messages) || decision.messages.length === 0) return decision;
+    const lastMessage = decision.messages[decision.messages.length - 1];
+    if (String(lastMessage?.role) !== 'user') return decision;
     const files = takePending(sessionId);
-    if (files.length === 0 || !Array.isArray(decision.messages) || decision.messages.length === 0) {
-      return decision;
-    }
+    // 新链路:客户端提交瞬间武装,这里一次性消费 pending 注入精确属于本消息的
+    // 附件通知。未武装(如忙时纯文字排队)就不动消息。
+    if (!armed.has(sessionId)) return decision;
+    armed.delete(sessionId);
+    const deliver = files;
+    if (deliver.length === 0) return decision;
+    lastSent.set(sessionId, deliver);
     const lastIndex = decision.messages.length - 1;
     const notice = {
       id: `file-native-${String(decision.messages[lastIndex]?.id ?? randomUUID())}`,
       role: 'user',
-      content: [{ type: 'text', text: fileListText(files) }],
+      content: [{ type: 'text', text: fileListText(deliver) }],
       source: {
         kind: 'plugin',
         plugin: 'file-native',
         form: 'notice',
-        summary: `📎 附件 ${files.length} 个文件`,
+        summary: `📎 附件 ${deliver.length} 个文件`,
       },
     };
     return {

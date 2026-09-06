@@ -9,8 +9,8 @@ import {
 } from '../src/live.ts';
 import type { LiveOwner } from '../src/live.ts';
 
-function image(name: string): File {
-  return { name, type: 'image/png' } as File;
+function png(name = 'a.png'): File {
+  return new File([new Uint8Array([1, 2, 3])], name, { type: 'image/png' });
 }
 
 function owner(sessionId: string, onAddImages: LiveOwner['onAddImages']): LiveOwner {
@@ -23,32 +23,43 @@ function owner(sessionId: string, onAddImages: LiveOwner['onAddImages']): LiveOw
   };
 }
 
-describe('live attachment owner', () => {
+describe('live owner', () => {
   beforeEach(() => resetLiveForTests());
 
-  it('旧会话卸载不会清掉刚挂上的新会话 owner', () => {
+  it('切会话时旧槽 clear 不会把新槽的 onAddImages 清成空', () => {
     const seen: string[] = [];
-    const oldToken = setLiveOwner(owner('A', () => seen.push('A')));
-    setLiveOwner(owner('B', (files) => seen.push(`B:${files[0]?.name ?? ''}`)));
-    clearLiveOwner(oldToken);
+    const tokenA = setLiveOwner(owner('A', (files) => {
+      seen.push(`A:${files.length}`);
+    }));
+    setLiveOwner(owner('B', (files) => {
+      seen.push(`B:${files[0]?.name ?? ''}`);
+    }));
+    clearLiveOwner(tokenA);
     assert.equal(getLiveOwner()?.sessionId, 'B');
-    addImages('B', [image('shot.png')]);
+    addImages('B', [png('shot.png')]);
     assert.deepEqual(seen, ['B:shot.png']);
   });
 
-  it('owner 未挂上时图片排队,挂上后交给官方 onAddImages', () => {
+  it('槽还没挂上时回形针/粘贴的图先排队,挂上后交给 onAddImages', () => {
     const seen: string[] = [];
-    addImages('S', [image('queued.png')]);
-    setLiveOwner(owner('S', (files) => seen.push(files.map((file) => file.name).join(','))));
+    addImages('S', [png('queued.png')]);
+    assert.equal(seen.length, 0);
+    setLiveOwner(owner('S', (files) => {
+      seen.push(files.map((file) => file.name).join(','));
+    }));
     assert.deepEqual(seen, ['queued.png']);
   });
 
-  it('排队图片不会投递给错误会话', () => {
+  it('排队的图不会送到别的会话', () => {
     const seen: string[] = [];
-    addImages('A', [image('only-a.png')]);
-    setLiveOwner(owner('B', (files) => seen.push(`B:${files[0]?.name ?? ''}`)));
+    addImages('A', [png('only-a.png')]);
+    setLiveOwner(owner('B', (files) => {
+      seen.push(`B:${files[0]?.name ?? ''}`);
+    }));
     assert.equal(seen.length, 0);
-    setLiveOwner(owner('A', (files) => seen.push(`A:${files[0]?.name ?? ''}`)));
+    setLiveOwner(owner('A', (files) => {
+      seen.push(`A:${files[0]?.name ?? ''}`);
+    }));
     assert.deepEqual(seen, ['A:only-a.png']);
   });
 });

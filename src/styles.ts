@@ -83,6 +83,9 @@ export const FR_CSS = `
 .fr-ctx-body{box-sizing:border-box;background:var(--dsw-alias-markdown-code-block);width:calc(100% - 22px);max-height:141px;
   color:var(--dsw-alias-label-tertiary);font:400 11px/16px var(--ds-font-family-code, ui-monospace,monospace);
   border:none;border-radius:8px;margin:4px 0 0 22px;padding:10px 16px 12px 12px;overflow:auto;white-space:pre-wrap}
+[data-file-native-queue]{flex:none;display:inline-flex;align-items:center;gap:2px;height:20px;padding:0 7px;
+  border-radius:999px;color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-interactive-bg-hover);
+  font:500 11px/20px Inter, var(--dsw-font-family, system-ui);white-space:nowrap;pointer-events:none}
 `
 
 let injected = false;

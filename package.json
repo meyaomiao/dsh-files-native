@@ -1,7 +1,7 @@
 {
   "name": "dsh-files-native",
   "description": "DSH 插件:接近原生质感的附件上传——拖入/粘贴/回形针,图片缩略图与文件卡片混排在官方附件栏",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

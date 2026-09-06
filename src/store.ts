@@ -12,6 +12,7 @@ export interface RailItem extends RailFile {
 const items: RailItem[] = [];
 const sentBySession = new Map<string, RailFile[]>();
 const sentByTurn = new Map<string, RailFile[]>();
+/** 排队行角标改为解析消息文本里的附件标记;此处的绑定/暂存 API 已随「标记嵌入草稿」链路移除。 */
 const listeners = new Set<() => void>();
 let generation = 0;
 
@@ -107,4 +108,13 @@ export function filesForTurn(sessionId: string, turn: number): readonly RailFile
 
 export function clear(sessionId: string): void {
   archiveSent(sessionId);
+}
+
+/** @internal 单测复位。 */
+export function resetForTests(): void {
+  items.length = 0;
+  sentBySession.clear();
+  sentByTurn.clear();
+  listeners.clear();
+  generation = 0;
 }
