@@ -33,7 +33,7 @@ function flushQueuedImages(): void {
   owner.onAddImages(files);
 }
 
-/** 挂上当前会话附件槽。返回 generation,卸载时交给 clearLiveOwner。 */
+/** 挂上当前会话附件槽。返回 generation,卸载时交给 clearLiveOwner,避免切会话把新槽清掉。 */
 export function setLiveOwner(next: LiveOwner | null): number {
   generation += 1;
   owner = next;
@@ -43,7 +43,7 @@ export function setLiveOwner(next: LiveOwner | null): number {
   return generation;
 }
 
-/** 只清自己挂上的那一档,避免旧槽卸载时把新槽清掉。 */
+/** 只清自己挂上的那一档;切会话后新槽已经进了更新的 generation,这里必须是空操作。 */
 export function clearLiveOwner(token: number): void {
   if (token !== generation) return;
   owner = null;
@@ -54,7 +54,10 @@ export function getLiveOwner(): LiveOwner | null {
   return owner;
 }
 
-/** 图片走当前会话官方 onAddImages;槽未就绪则按 sessionId 排队,禁止吞成空函数。 */
+/**
+ * 图片走当前会话官方 onAddImages。
+ * 槽还没挂上(空会话 / 刚切会话)就先按 sessionId 排队,挂上后 flush,禁止吞成空函数。
+ */
 export function addImages(sessionId: string, files: readonly File[]): void {
   if (files.length === 0) return;
   const sid = sessionId || currentSessionId();
@@ -64,7 +67,7 @@ export function addImages(sessionId: string, files: readonly File[]): void {
   }
   const key = sid || owner?.sessionId || lastSessionId;
   const prev = queuedImages.get(key) ?? [];
-  queuedImages.set(key, prev.concat([...files]));
+  queuedImages.set(key, prev.concat(files as File[]));
 }
 
 export function setDragDepth(depth: number): void {

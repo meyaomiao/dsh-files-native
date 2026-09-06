@@ -31,11 +31,11 @@ describe('archiveIfNoticeMatches', () => {
     assert.equal(store.pending().some((item) => item.id === 'a'), false);
   });
 
-  it('pendingFor 只返回当前会话的待发卡', () => {
-    const a = `session-a-${Date.now()}`;
-    const b = `session-b-${Date.now()}`;
+  it('pendingFor 只画当前会话,切会话不会带上上一会话的待发卡', () => {
+    const a = `sess-a-${Date.now()}`;
+    const b = `sess-b-${Date.now()}`;
     store.add(a, {
-      id: `${a}-item`,
+      id: `${a}-1`,
       name: 'a.txt',
       relPath: '.dsh-uploads/a.txt',
       size: 1,
@@ -43,15 +43,15 @@ describe('archiveIfNoticeMatches', () => {
       status: 'done',
     });
     store.add(b, {
-      id: `${b}-item`,
+      id: `${b}-1`,
       name: 'b.pdf',
       relPath: '',
       size: 2,
       mediaType: 'application/pdf',
       status: 'uploading',
     });
-    assert.deepEqual(store.pendingFor(a).map((item) => item.name), ['a.txt']);
-    assert.deepEqual(store.pendingFor(b).map((item) => item.name), ['b.pdf']);
+    assert.equal(store.pendingFor(a).map((item) => item.name).join(','), 'a.txt');
+    assert.equal(store.pendingFor(b).map((item) => item.name).join(','), 'b.pdf');
     assert.equal(store.pendingFor('other').length, 0);
   });
 });

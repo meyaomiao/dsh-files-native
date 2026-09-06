@@ -151,8 +151,7 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
     setEdges((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
   };
 
-  const visibleFiles = files.filter((item) => item.sessionId === sessionId);
-  const itemCount = props.attachments.length + visibleFiles.length;
+  const itemCount = props.attachments.length + files.length;
   useLayoutEffect(() => {
     const grew = countRef.current !== 0 && itemCount > countRef.current;
     countRef.current = itemCount;
@@ -190,7 +189,7 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
   };
 
   const hasImages = props.attachments.length > 0;
-  const hasFiles = visibleFiles.length > 0;
+  const hasFiles = files.length > 0;
   if (!hasImages && !hasFiles) return null;
 
   return h('div', { className: 'fr-rail', 'data-file-native': true },
@@ -203,7 +202,7 @@ export function FileRail(props: AttachmentsOwner & { sessionId?: string }): Reac
           onRemove: () => props.onRemoveImage(item.id),
           onOpen: () => setPreview(item),
         })),
-        ...visibleFiles.map((item) => h(FileTile, { key: item.id, item, sessionId })),
+        ...files.map((item) => h(FileTile, { key: item.id, item, sessionId })),
       ),
       edges.right ? h('button', { type: 'button', className: 'fr-arrow fr-arrow-right', 'aria-label': '向右', onClick: () => page(1) }, h(IconChevronRight)) : null,
     ),
