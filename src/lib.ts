@@ -86,30 +86,32 @@ export function splitIntake(files: readonly File[]): { images: File[]; others: F
   return { images, others };
 }
 
-/** 任意 image/*(含 heic/svg)或官方四种扩展名:粘贴时应让给视觉桥,不当附件。 */
+/** 任意 image/*(含 heic/svg)或官方四种扩展名。 */
 export function isAnyImage(file: { type?: string; name?: string }): boolean {
   const type = (file.type ?? '').toLowerCase();
   if (type.startsWith('image/')) return true;
   return isNativeImage(file);
 }
 
-export function classifyPasteFiles(files: readonly File[]): { images: File[]; others: File[] } {
-  const images: File[] = [];
-  const others: File[] = [];
+export type PastePlan =
+  | { action: 'yield' }
+  | { action: 'take'; cards: File[]; nativeImages: File[] };
+
+/**
+ * 粘贴分流(同步决策,不能等网络探测):
+ * - 纯官方四类图(png/jpeg/webp/gif)→ yield:官方自己会出缩略图,ModLens 要接管也接得住。
+ * - 其余一律接管:非图 + 官方接不住的图(heic/bmp/svg…)恢复 v0.1.3 行为进文件卡,
+ *   保证没装视觉桥的用户不丢内容;官方四类图经 onImages 异步探测后再定去向。
+ */
+export function planPaste(files: readonly File[]): PastePlan {
+  const nativeImages: File[] = [];
+  const cards: File[] = [];
   for (const file of files) {
-    if (isAnyImage(file)) images.push(file);
-    else others.push(file);
+    if (isNativeImage(file)) nativeImages.push(file);
+    else cards.push(file);
   }
-  return { images, others };
-}
-
-export type PasteAction = 'yield' | 'take-files' | 'split';
-
-/** 只有图 → 放手;只有非图 → 接管;混贴 → 只收非图,图另送视觉桥或官方。 */
-export function decidePasteAction(imageCount: number, otherCount: number): PasteAction {
-  if (otherCount === 0) return 'yield';
-  if (imageCount === 0) return 'take-files';
-  return 'split';
+  if (cards.length === 0 && nativeImages.length > 0) return { action: 'yield' };
+  return { action: 'take', cards, nativeImages };
 }
 
 /** 发给模型的可读清单。对话区用 parseNoticeFiles 还原卡片。 */

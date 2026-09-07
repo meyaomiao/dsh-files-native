@@ -9,12 +9,11 @@ import {
   isNativeImage,
   isSafeRelPath,
   parseNoticeFiles,
+  planPaste,
   sanitizeFileName,
   splitIntake,
   uniqueName,
   UPLOAD_DIR,
-  classifyPasteFiles,
-  decidePasteAction,
 } from '../src/lib.ts';
 
 describe('isNativeImage', () => {
@@ -78,27 +77,48 @@ describe('extOf / formatSize / splitIntake', () => {
   });
 });
 
-describe('isAnyImage / decidePasteAction', () => {
-  it('任意 image/* 都算图(含 heic),官方轨以外的图也让出', () => {
+describe('planPaste 粘贴分流(无视觉桥用户不回归)', () => {
+  it('任意 image/* 都算图(含 heic)', () => {
     assert.equal(isAnyImage({ type: 'image/heic', name: 'a.heic' }), true);
     assert.equal(isAnyImage({ type: 'image/svg+xml', name: 'a.svg' }), true);
     assert.equal(isAnyImage({ type: 'image/png', name: 'a.png' }), true);
     assert.equal(isAnyImage({ type: 'application/pdf', name: 'a.pdf' }), false);
-    assert.equal(isAnyImage({ type: '', name: 'shot.PNG' }), true);
   });
-  it('纯图粘贴 yield,纯文件 take-files,混贴 split', () => {
-    assert.equal(decidePasteAction(1, 0), 'yield');
-    assert.equal(decidePasteAction(2, 0), 'yield');
-    assert.equal(decidePasteAction(0, 1), 'take-files');
-    assert.equal(decidePasteAction(1, 1), 'split');
-    assert.equal(decidePasteAction(0, 0), 'yield');
+  it('纯官方四类图 → yield(官方/ModLens 自己处理)', () => {
+    const plan = planPaste([
+      { name: 'a.png', type: 'image/png' } as File,
+      { name: 'b.jpg', type: 'image/jpeg' } as File,
+    ]);
+    assert.equal(plan.action, 'yield');
   });
-  it('classifyPasteFiles 把 heic 归到 images', () => {
-    const heic = { name: 'a.heic', type: 'image/heic' } as File;
-    const pdf = { name: 'b.pdf', type: 'application/pdf' } as File;
-    const { images, others } = classifyPasteFiles([heic, pdf]);
-    assert.equal(images.length, 1);
-    assert.equal(others.length, 1);
+  it('纯 heic 粘贴 → 接管进文件卡(v0.1.3 行为,不依赖视觉桥)', () => {
+    const plan = planPaste([{ name: 'a.heic', type: 'image/heic' } as File]);
+    assert.equal(plan.action, 'take');
+    if (plan.action === 'take') {
+      assert.equal(plan.cards.length, 1);
+      assert.equal(plan.nativeImages.length, 0);
+    }
+  });
+  it('混贴 heic+png+pdf:heic/pdf 进文件卡,png 走官方轨探测', () => {
+    const plan = planPaste([
+      { name: 'a.heic', type: 'image/heic' } as File,
+      { name: 'b.png', type: 'image/png' } as File,
+      { name: 'c.pdf', type: 'application/pdf' } as File,
+    ]);
+    assert.equal(plan.action, 'take');
+    if (plan.action === 'take') {
+      assert.deepEqual(plan.cards.map((f) => f.name).sort(), ['a.heic', 'c.pdf']);
+      assert.deepEqual(plan.nativeImages.map((f) => f.name), ['b.png']);
+    }
+  });
+  it('纯文件粘贴 → 接管上传', () => {
+    const plan = planPaste([{ name: 'a.pdf', type: 'application/pdf' } as File]);
+    assert.equal(plan.action, 'take');
+    if (plan.action === 'take') assert.equal(plan.cards.length, 1);
+  });
+  it('MIME 空的 png 截图 → yield(官方扩展名兜底)', () => {
+    const plan = planPaste([{ name: 'shot.PNG', type: '' } as File]);
+    assert.equal(plan.action, 'yield');
   });
 });
 

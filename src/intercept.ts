@@ -1,6 +1,6 @@
 /** 整页拖入 / 粘贴:捕获阶段接管,深度计数防闪烁,Esc 取消,合成 dragend 复位官方 overlay。 */
 
-import { classifyPasteFiles, decidePasteAction } from './lib.ts';
+import { planPaste } from './lib.ts';
 
 export interface InterceptHandlers {
   onFiles: (files: File[]) => void;
@@ -95,14 +95,14 @@ export function installFileIntercept(handlers: InterceptHandlers): () => void {
       .filter((file): file is File => file !== null);
     const files = fromList.length > 0 ? fromList : fromItems;
     if (files.length === 0) return;
-    const { images, others } = classifyPasteFiles(files);
-    const action = decidePasteAction(images.length, others.length);
-    // 只有图:不 preventDefault,让 ModLens / toolkit / 官方自己处理。
-    if (action === 'yield') return;
+    const plan = planPaste(files);
+    // 纯官方四类图:不 preventDefault,官方/ModLens 自己处理(无视觉桥时官方出缩略图)。
+    if (plan.action === 'yield') return;
     event.preventDefault();
-    event.stopPropagation();
-    if (others.length > 0) handlers.onFiles(others);
-    if (action === 'split' && images.length > 0) handlers.onImages?.(images);
+    // immediate:已经决定这些文件的归属(文件卡/异步探测),别让后注册的视觉监听双写。
+    event.stopImmediatePropagation();
+    if (plan.cards.length > 0) handlers.onFiles(plan.cards);
+    if (plan.nativeImages.length > 0) handlers.onImages?.(plan.nativeImages);
   };
 
   document.addEventListener('dragenter', onDragEnter, true);

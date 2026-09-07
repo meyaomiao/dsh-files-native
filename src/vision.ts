@@ -36,11 +36,19 @@ function insertComposerText(text: string): void {
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
+/** 404 过一次就粘性站起:没装 ModLens 的用户后续选图不再发探测请求。 */
+let modlensRouteAvailable = true;
+
 export async function probeModlensTakeover(): Promise<boolean> {
+  if (!modlensRouteAvailable) return false;
   const label = currentModelLabel();
   try {
     const res = await fetch(`/modlens/paste?model=${encodeURIComponent(label)}`);
-    if (res.status === 404 || !res.ok) return false;
+    if (res.status === 404) {
+      modlensRouteAvailable = false;
+      return false;
+    }
+    if (!res.ok) return false;
     const body = await res.json() as { takeover?: boolean };
     return body.takeover === true;
   } catch {
