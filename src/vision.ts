@@ -43,7 +43,10 @@ export async function probeModlensTakeover(): Promise<boolean> {
   if (!modlensRouteAvailable) return false;
   const label = currentModelLabel();
   try {
-    const res = await fetch(`/modlens/paste?model=${encodeURIComponent(label)}`);
+    // 超时兜底:loopback 也不许悬空,否则回形针的图永远不落。
+    const res = await fetch(`/modlens/paste?model=${encodeURIComponent(label)}`, {
+      signal: AbortSignal.timeout(2000),
+    });
     if (res.status === 404) {
       modlensRouteAvailable = false;
       return false;
@@ -63,7 +66,7 @@ async function uploadModlensPaste(file: File): Promise<string | undefined> {
   return typeof body.path === 'string' && body.path !== '' ? body.path : undefined;
 }
 
-/** 官方图:ModLens takeover 则插路径;否则走 onAddImages。 */
+/** 官方图:ModLens takeover 则插路径;否则走 onAddImages。上传失败的单张回落官方轨,不静默丢。 */
 export async function deliverImages(sessionId: string, files: readonly File[]): Promise<void> {
   if (files.length === 0) return;
   const takeover = await probeModlensTakeover();
@@ -72,17 +75,20 @@ export async function deliverImages(sessionId: string, files: readonly File[]): 
     return;
   }
   const paths: string[] = [];
+  const failed: File[] = [];
   for (const file of files) {
     try {
       const path = await uploadModlensPaste(file);
       if (path !== undefined) paths.push(path);
+      else failed.push(file);
     } catch {
-      // 单张失败不阻断其余
+      failed.push(file);
     }
   }
   if (paths.length === 0) {
     addImages(sessionId, files);
     return;
   }
+  if (failed.length > 0) addImages(sessionId, failed);
   insertComposerText(`${paths.join(' ')} `);
 }
