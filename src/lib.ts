@@ -86,6 +86,32 @@ export function splitIntake(files: readonly File[]): { images: File[]; others: F
   return { images, others };
 }
 
+/** 任意 image/*(含 heic/svg)或官方四种扩展名:粘贴时应让给视觉桥,不当附件。 */
+export function isAnyImage(file: { type?: string; name?: string }): boolean {
+  const type = (file.type ?? '').toLowerCase();
+  if (type.startsWith('image/')) return true;
+  return isNativeImage(file);
+}
+
+export function classifyPasteFiles(files: readonly File[]): { images: File[]; others: File[] } {
+  const images: File[] = [];
+  const others: File[] = [];
+  for (const file of files) {
+    if (isAnyImage(file)) images.push(file);
+    else others.push(file);
+  }
+  return { images, others };
+}
+
+export type PasteAction = 'yield' | 'take-files' | 'split';
+
+/** 只有图 → 放手;只有非图 → 接管;混贴 → 只收非图,图另送视觉桥或官方。 */
+export function decidePasteAction(imageCount: number, otherCount: number): PasteAction {
+  if (otherCount === 0) return 'yield';
+  if (imageCount === 0) return 'take-files';
+  return 'split';
+}
+
 /** 发给模型的可读清单。对话区用 parseNoticeFiles 还原卡片。 */
 export function fileListText(files: readonly RailFile[]): string {
   const lines = files.map((file) => `- ${file.name} — path="${file.relPath}" size=${file.size} type="${file.mediaType}"`);

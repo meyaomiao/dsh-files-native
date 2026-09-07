@@ -12,7 +12,8 @@ import { MessageCards } from './context.tsx';
 import * as store from './store.ts';
 import { ensureStyles } from './styles.ts';
 import { installFileIntercept } from './intercept.ts';
-import { addImages, clearLiveOwner, currentSessionId, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
+import { clearLiveOwner, currentSessionId, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
+import { deliverImages } from './vision.ts';
 import type { AttachmentsOwner, ClientCtx } from './types.ts';
 
 const name = 'file-native';
@@ -156,7 +157,11 @@ function installLiveIntercept(): () => void {
     onDepth: (depth) => setDragDepth(depth),
     onFiles: (files) => {
       const sessionId = currentSessionId();
-      intakeFiles(sessionId, files, (images) => addImages(sessionId, images));
+      intakeFiles(sessionId, files, (images) => { void deliverImages(sessionId, images); });
+    },
+    onImages: (files) => {
+      const sessionId = currentSessionId();
+      void deliverImages(sessionId, files);
     },
   });
 }

@@ -5,6 +5,7 @@ import {
   extOf,
   fileListText,
   formatSize,
+  isAnyImage,
   isNativeImage,
   isSafeRelPath,
   parseNoticeFiles,
@@ -12,6 +13,8 @@ import {
   splitIntake,
   uniqueName,
   UPLOAD_DIR,
+  classifyPasteFiles,
+  decidePasteAction,
 } from '../src/lib.ts';
 
 describe('isNativeImage', () => {
@@ -70,6 +73,30 @@ describe('extOf / formatSize / splitIntake', () => {
     const png = { name: 'a.png', type: 'image/png' } as File;
     const pdf = { name: 'b.pdf', type: 'application/pdf' } as File;
     const { images, others } = splitIntake([png, pdf]);
+    assert.equal(images.length, 1);
+    assert.equal(others.length, 1);
+  });
+});
+
+describe('isAnyImage / decidePasteAction', () => {
+  it('任意 image/* 都算图(含 heic),官方轨以外的图也让出', () => {
+    assert.equal(isAnyImage({ type: 'image/heic', name: 'a.heic' }), true);
+    assert.equal(isAnyImage({ type: 'image/svg+xml', name: 'a.svg' }), true);
+    assert.equal(isAnyImage({ type: 'image/png', name: 'a.png' }), true);
+    assert.equal(isAnyImage({ type: 'application/pdf', name: 'a.pdf' }), false);
+    assert.equal(isAnyImage({ type: '', name: 'shot.PNG' }), true);
+  });
+  it('纯图粘贴 yield,纯文件 take-files,混贴 split', () => {
+    assert.equal(decidePasteAction(1, 0), 'yield');
+    assert.equal(decidePasteAction(2, 0), 'yield');
+    assert.equal(decidePasteAction(0, 1), 'take-files');
+    assert.equal(decidePasteAction(1, 1), 'split');
+    assert.equal(decidePasteAction(0, 0), 'yield');
+  });
+  it('classifyPasteFiles 把 heic 归到 images', () => {
+    const heic = { name: 'a.heic', type: 'image/heic' } as File;
+    const pdf = { name: 'b.pdf', type: 'application/pdf' } as File;
+    const { images, others } = classifyPasteFiles([heic, pdf]);
     assert.equal(images.length, 1);
     assert.equal(others.length, 1);
   });
