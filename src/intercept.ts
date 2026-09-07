@@ -1,11 +1,13 @@
 /** 整页拖入 / 粘贴:捕获阶段接管,深度计数防闪烁,Esc 取消,合成 dragend 复位官方 overlay。 */
 
-import { planPaste } from './lib.ts';
+import { extractPasteText, planPaste } from './lib.ts';
 
 export interface InterceptHandlers {
   onFiles: (files: File[]) => void;
   /** 粘贴混贴时图走视觉桥/官方;纯图粘贴不调用(事件已让出)。 */
   onImages?: (files: File[]) => void;
+  /** 接管粘贴时剪贴板里的真说明文字(路径字会被滤掉),由调用方补写回输入框。 */
+  onText?: (text: string) => void;
   canAccept: () => boolean;
   onDepth?: (depth: number) => void;
 }
@@ -103,6 +105,11 @@ export function installFileIntercept(handlers: InterceptHandlers): () => void {
     event.stopImmediatePropagation();
     if (plan.cards.length > 0) handlers.onFiles(plan.cards);
     if (plan.nativeImages.length > 0) handlers.onImages?.(plan.nativeImages);
+    // 文字+文件混贴:真说明文字补写回输入框;Windows 路径字滤掉不进草稿。
+    if (handlers.onText !== undefined) {
+      const kept = extractPasteText(event.clipboardData?.getData('text/plain') ?? '', files);
+      if (kept !== '') handlers.onText(kept);
+    }
   };
 
   document.addEventListener('dragenter', onDragEnter, true);

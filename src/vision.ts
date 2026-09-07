@@ -36,6 +36,11 @@ function insertComposerText(text: string): void {
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
+/** 混贴接管时把真说明文字补写回输入框(路径字已在 extractPasteText 滤掉)。 */
+export function pasteAccompanyingText(text: string): void {
+  insertComposerText(text);
+}
+
 /** 404 过一次就粘性站起:没装 ModLens 的用户后续选图不再发探测请求。 */
 let modlensRouteAvailable = true;
 

@@ -114,6 +114,27 @@ export function planPaste(files: readonly File[]): PastePlan {
   return { action: 'take', cards, nativeImages };
 }
 
+/**
+ * 混贴时该不该保留附带文字:剪贴板「文字+文件」并存的两种来源——
+ * Windows 复制文件附带的路径字(每个词都是文件路径)是冗余的,丢弃;
+ * Excel/Word/说明文字不引用本次文件名,是真内容,整段保留(不拆改写)。
+ */
+export function extractPasteText(raw: string, files: readonly { name: string }[]): string {
+  const text = raw.replace(/\uFFFC/g, '').trim();
+  if (text === '') return '';
+  // 只按「文件名」判断:短名字(<4 字符)容易误伤任意文本。
+  const names = files
+    .map((file) => file.name.replace(/^.*[/\\]/, ''))
+    .filter((name) => name.length >= 4);
+  if (names.length === 0) return text;
+  const tokens = text.split(/\s+/).filter(Boolean);
+  const referenced = (token: string): boolean =>
+    names.some((name) => token.toLowerCase().includes(name.toLowerCase()));
+  const meaningful = tokens.filter((token) => !referenced(token));
+  // 全部 token 都是「文件本体/路径」→ 冗余;只要有一句真话就整段保留。
+  return meaningful.length === 0 ? '' : text;
+}
+
 /** 发给模型的可读清单。对话区用 parseNoticeFiles 还原卡片。 */
 export function fileListText(files: readonly RailFile[]): string {
   const lines = files.map((file) => `- ${file.name} — path="${file.relPath}" size=${file.size} type="${file.mediaType}"`);

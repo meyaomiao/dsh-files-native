@@ -8,6 +8,7 @@ import {
   isAnyImage,
   isNativeImage,
   isSafeRelPath,
+  extractPasteText,
   parseNoticeFiles,
   planPaste,
   sanitizeFileName,
@@ -119,6 +120,29 @@ describe('planPaste 粘贴分流(无视觉桥用户不回归)', () => {
   it('MIME 空的 png 截图 → yield(官方扩展名兜底)', () => {
     const plan = planPaste([{ name: 'shot.PNG', type: '' } as File]);
     assert.equal(plan.action, 'yield');
+  });
+});
+
+describe('extractPasteText 混贴附带文字取舍', () => {
+  const pdf = { name: '报告.pdf' };
+  const png = { name: '屏幕快照 2026-09-07.png' };
+  it('Windows 路径字(全是文件路径)→ 丢弃', () => {
+    assert.equal(extractPasteText('C:\\Users\\x\\Desktop\\报告.pdf', [pdf]), '');
+    assert.equal(extractPasteText('/Users/x/Desktop/报告.pdf', [pdf]), '');
+  });
+  it('多文件多行路径 → 丢弃', () => {
+    assert.equal(extractPasteText('C:\\a\\报告.pdf\nC:\\b\\图.png', [pdf, { name: '图.png' }]), '');
+  });
+  it('Excel/说明文字(不引用文件名)→ 整段保留', () => {
+    const tsv = '姓名\t分数\n张三\t98';
+    assert.equal(extractPasteText(tsv, [png]), tsv);
+    assert.equal(extractPasteText('这是设计稿的修改说明,请看附件', [pdf]), '这是设计稿的修改说明,请看附件');
+  });
+  it('文字里顺带提到文件名 → 整段保留不拆改', () => {
+    assert.equal(extractPasteText('详见 报告.pdf 的修改说明', [pdf]), '详见 报告.pdf 的修改说明');
+  });
+  it('空文字 → 空', () => {
+    assert.equal(extractPasteText('  ', [pdf]), '');
   });
 });
 

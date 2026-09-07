@@ -13,7 +13,7 @@ import * as store from './store.ts';
 import { ensureStyles } from './styles.ts';
 import { installFileIntercept } from './intercept.ts';
 import { clearLiveOwner, currentSessionId, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
-import { deliverImages } from './vision.ts';
+import { deliverImages, pasteAccompanyingText } from './vision.ts';
 import type { AttachmentsOwner, ClientCtx } from './types.ts';
 
 const name = 'file-native';
@@ -163,6 +163,7 @@ function installLiveIntercept(): () => void {
       const sessionId = currentSessionId();
       void deliverImages(sessionId, files);
     },
+    onText: (text) => pasteAccompanyingText(text),
   });
 }
 
