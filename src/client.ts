@@ -7,7 +7,7 @@ import { createElement as h, useEffect, useLayoutEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import { intakeFiles } from './rail.tsx';
 import { PaperclipButton } from './picker.tsx';
-import { UploadedTail, producedPathsOf, type TailMatch } from './tail.tsx';
+
 import { MessageCards } from './context.tsx';
 import * as store from './store.ts';
 import { ensureStyles } from './styles.ts';
@@ -126,31 +126,6 @@ function PickerSlot(props: {
   );
 }
 
-function TailSlot(props: {
-  sessionId?: string;
-  openFile?: (path: string) => void;
-  matched?: TailMatch | null;
-  turn?: { turn?: number };
-}): ReactElement | null {
-  return h(UploadedTail, {
-    sessionId: props.sessionId,
-    openFile: props.openFile,
-    matched: props.matched ?? null,
-    turn: props.turn?.turn,
-  });
-}
-
-function selectTail(owner: {
-  sessionId?: string;
-  seq?: number;
-  turn?: { turn?: number; data?: { get?: (key: string) => { produced?: readonly { path: string; seq: number }[] } } };
-  openFile?: (path: string) => void;
-}): TailMatch | null {
-  const produced = producedPathsOf(owner);
-  if (produced.length === 0) return null;
-  return { uploaded: [], produced };
-}
-
 function installLiveIntercept(): () => void {
   return installFileIntercept({
     canAccept: () => true,
@@ -216,12 +191,6 @@ export function apply(ctx: ClientCtx): void {
     order: 0,
     priority: base,
   }, PickerSlot));
-
-  safeInject('conversation.chat.turnTail', () => ctx.slots.register({
-    name: 'conversation.chat.turnTail',
-    select: selectTail,
-    priority: base,
-  }, TailSlot));
 
   console.info(`[file-native] client loaded (instance #${INSTANCE})`);
 }
