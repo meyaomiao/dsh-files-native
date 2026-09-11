@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- Drop `betterSidebar` from the client module `inject` list. On DSH 0.1.5 the host skips a client that declares a service it does not provide. Optional sidebar preview still uses try/catch; without it, cards open in a new tab.
+
 ## 0.2.1
 
 - Yield reply-tail produced chips to official DSH deliverable cards (0.1.5-rc.2). User-bubble attachment cards stay.

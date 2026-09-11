@@ -17,8 +17,8 @@ import { deliverImages, pasteAccompanyingText } from './vision.ts';
 import type { AttachmentsOwner, ClientCtx } from './types.ts';
 
 const name = 'file-native';
-/** 插槽注入必须声明 slots,否则客户端抛 cannot get property without inject。host 半的 webServer/sessions 见 src/index.ts。 */
-const inject = ['slots', 'betterSidebar'];
+/** 插槽注入必须声明 slots。better-sidebar 不是硬依赖:0.1.5 上写进模块 inject 会导致 client 整段不激活。 */
+const inject = ['slots'];
 
 function RailSlot(props: AttachmentsOwner & { sessionId?: string }): ReactElement | null {
   ensureStyles();
@@ -154,7 +154,12 @@ const INSTANCE = (() => {
 export function apply(ctx: ClientCtx): void {
   ctx.effect(() => installLiveIntercept(), 'file-native: document intercept');
 
-  const sidebar = ctx.betterSidebar;
+  let sidebar: ClientCtx['betterSidebar'];
+  try {
+    sidebar = ctx.betterSidebar;
+  } catch {
+    sidebar = undefined;
+  }
   if (sidebar !== undefined && sidebar.features.includes('openFile')) {
     chatCardOpener = (sid, relPath, name) => sidebar.openFile({ sessionId: sid }, relPath, name);
   } else {

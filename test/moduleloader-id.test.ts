@@ -21,6 +21,13 @@ describe('ModuleLoader id matches package.json name', () => {
     assert.equal(match[1], pkg.name);
   });
 
+  it('client module inject is slots only (no betterSidebar)', () => {
+    const src = readFileSync(join(root, 'src/client.ts'), 'utf8');
+    const match = src.match(/^const inject = \[([^\]]*)\];/m);
+    assert.ok(match, 'src/client.ts must declare const inject');
+    assert.equal(match[1].replace(/\s/g, '').replace(/'/g, '"'), '"slots"');
+  });
+
   it('cordis.patch.yml insert name equals package.json name; plugin id stays file-native', () => {
     const insert = patch.match(/-\s*insert:\s*\n\s*-\s*id:\s*(\S+)\s*\n\s*name:\s*(\S+)/);
     assert.ok(insert, 'cordis.patch.yml must contain an insert with id and name');
