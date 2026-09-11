@@ -7,7 +7,8 @@ import { intakeFiles } from './rail.tsx';
 import { IconPaperclip } from './icons.tsx';
 import { DropMask } from './overlay.tsx';
 import { ComposerRail } from './rail-portal.tsx';
-import { addImages, currentSessionId, getDragDepth, rememberSessionId, subscribeLive } from './live.ts';
+import { currentSessionId, getDragDepth, rememberSessionId, subscribeLive } from './live.ts';
+import { deliverImages } from './vision.ts';
 
 export function PaperclipButton(props: { sessionId?: string }): ReactElement {
   ensureStyles();
@@ -22,7 +23,7 @@ export function PaperclipButton(props: { sessionId?: string }): ReactElement {
     event.currentTarget.value = '';
     const sid = String(props.sessionId || currentSessionId());
     if (files.length === 0) return;
-    intakeFiles(sid, files, (images) => addImages(sid, images));
+    intakeFiles(sid, files, (images) => { void deliverImages(sid, images); });
   };
 
   return h('span', null,

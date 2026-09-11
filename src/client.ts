@@ -7,12 +7,13 @@ import { createElement as h, useEffect, useLayoutEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import { intakeFiles } from './rail.tsx';
 import { PaperclipButton } from './picker.tsx';
-import { UploadedTail, producedPathsOf, type TailMatch } from './tail.tsx';
+
 import { MessageCards } from './context.tsx';
 import * as store from './store.ts';
 import { ensureStyles } from './styles.ts';
 import { installFileIntercept } from './intercept.ts';
-import { addImages, clearLiveOwner, currentSessionId, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
+import { clearLiveOwner, currentSessionId, rememberSessionId, resolveSessionId, setDragDepth, setLiveOwner } from './live.ts';
+import { deliverImages, pasteAccompanyingText } from './vision.ts';
 import type { AttachmentsOwner, ClientCtx } from './types.ts';
 
 const name = 'file-native';
@@ -125,39 +126,19 @@ function PickerSlot(props: {
   );
 }
 
-function TailSlot(props: {
-  sessionId?: string;
-  openFile?: (path: string) => void;
-  matched?: TailMatch | null;
-  turn?: { turn?: number };
-}): ReactElement | null {
-  return h(UploadedTail, {
-    sessionId: props.sessionId,
-    openFile: props.openFile,
-    matched: props.matched ?? null,
-    turn: props.turn?.turn,
-  });
-}
-
-function selectTail(owner: {
-  sessionId?: string;
-  seq?: number;
-  turn?: { turn?: number; data?: { get?: (key: string) => { produced?: readonly { path: string; seq: number }[] } } };
-  openFile?: (path: string) => void;
-}): TailMatch | null {
-  const produced = producedPathsOf(owner);
-  if (produced.length === 0) return null;
-  return { uploaded: [], produced };
-}
-
 function installLiveIntercept(): () => void {
   return installFileIntercept({
     canAccept: () => true,
     onDepth: (depth) => setDragDepth(depth),
     onFiles: (files) => {
       const sessionId = currentSessionId();
-      intakeFiles(sessionId, files, (images) => addImages(sessionId, images));
+      intakeFiles(sessionId, files, (images) => { void deliverImages(sessionId, images); });
     },
+    onImages: (files) => {
+      const sessionId = currentSessionId();
+      void deliverImages(sessionId, files);
+    },
+    onText: (text) => pasteAccompanyingText(text),
   });
 }
 
@@ -210,12 +191,6 @@ export function apply(ctx: ClientCtx): void {
     order: 0,
     priority: base,
   }, PickerSlot));
-
-  safeInject('conversation.chat.turnTail', () => ctx.slots.register({
-    name: 'conversation.chat.turnTail',
-    select: selectTail,
-    priority: base,
-  }, TailSlot));
 
   console.info(`[file-native] client loaded (instance #${INSTANCE})`);
 }

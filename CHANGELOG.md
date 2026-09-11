@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1
+
+- Yield reply-tail produced chips to official DSH deliverable cards (0.1.5-rc.2). User-bubble attachment cards stay.
+- Paste yield: official PNG/JPEG/WebP/GIF go to native draft images; other files stay on this rail.
+- README: compatibility table and star CTA moved to the top. 0.1.x is maintenance for DSH ≤ 0.1.2-rc.1.
+
+## 0.2.0
+
+- Queue-style attachments, user-bubble file cards, click-to-open.
+
 ## 0.1.3
 
 - Fix composer attachments lost on empty/new sessions or session switches: paperclip and pasted images are queued per session until the attachment slot is ready instead of being dropped.

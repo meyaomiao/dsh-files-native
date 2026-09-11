@@ -11,6 +11,23 @@
 
 </div>
 
+## ⭐ 欢迎点星收藏
+
+如果附件轨帮到了你，欢迎到 [GitHub 仓库](https://github.com/meyaomiao/dsh-files-native) 点个 Star ⭐，让更多 DSH 用户看到它。问题与建议请提 Issue。
+
+## 📋 兼容性
+
+| 插件版本 | 状态 | 对应 DSH |
+|---|---|---|
+| **0.2.x**（当前主线） | ✅ | **0.1.5-rc.1 / 0.1.5-rc.2**（及之后的 0.1.5 线） |
+| 0.1.x | 🔧 维护态（仅修 bug） | DSH ≤ 0.1.2-rc.1（仍兼容 0.1.1-rc.2 / 0.1.2-alpha.4） |
+
+### 本次升级功能变化
+
+- **官方已有的交给官方**：回复尾的「产物」卡不再由本插件绘制，改用 DSH 官方交付文件卡（0.1.5-rc.2 起排版/图标更紧）。用户气泡旁的附件卡仍由本插件画。
+- **粘贴让路**：纯官方四类图（PNG / JPEG / WebP / GIF）交给官方草稿图；其它文件仍走本插件轨。
+- 不要和 `dsh-file-fix` / `dsh-file-upload` / `dsh-paste-to-path` 叠装。
+
 运行时插件 id 仍是 `file-native`（上传路由 `/plugins/file-native/*`）。npm / GitHub 仓库名是 `dsh-files-native`。
 
 - **图片**（PNG / JPEG / WebP / GIF）走官方草稿图栏（64px 缩略图，点击灯箱），发送后进模型视觉上下文。
@@ -19,7 +36,7 @@
 - **气泡附件卡**：消息发出后，文件卡渲染在用户气泡上方（与图片同列右对齐），注入提示行自动隐藏。
 - **点击打开**：点气泡附件卡——装了 [better-sidebar](https://github.com/用户/dsh-better-sidebar) 走侧栏预览；未装则新页签打开（文本/图片/PDF 页签内展示，二进制自动下载）。
 - 发送后文件卡贴在用户气泡栈（与官方图同一列），作业回复不会插在提问和文件中间。
-- 发送成功即清输入框待发轨。回复结尾只画「产物」chip。
+- 发送成功即清输入框待发轨。**回复尾产物卡让给官方。**
 
 不要和 `dsh-file-fix` / `dsh-file-upload` / `dsh-paste-to-path` 叠装。
 
@@ -29,7 +46,7 @@
 |---|---|
 | ![空输入框](screenshots/01-empty.png) | ![待发混排](screenshots/02-rail.png) |
 
-| 拖入窗口任意位置 | 发送后：图与文件卡跟用户气泡，产物在回复尾 |
+| 拖入窗口任意位置 | 发送后：图与文件卡跟用户气泡（产物走官方卡） |
 |---|---|
 | ![拖入遮罩](screenshots/03-overlay.png) | ![发送后](screenshots/04-sent.png) |
 
@@ -81,10 +98,5 @@ dsh plugin --profile web add .
 - 单文件 50 MB，单批 20 个。
 - 上传路由仅 loopback。
 - 刷新会丢掉「已上传未发送」的文件卡（磁盘文件仍在 `.dsh-uploads/`）。
-
-## 兼容性
-
-- DeepSeek Harness `0.1.2-rc.1`（仍兼容 `0.1.1-rc.2` 与 `0.1.2-alpha.4`，web profile）
-- 不要和 `dsh-file-fix` / `dsh-file-upload` / `dsh-paste-to-path` 叠装
 
 改仓库前先读 [CONTRIBUTING.md](./CONTRIBUTING.md)（Issue → 分支 → Draft PR）。思考原则见 [AI-ISSUE-WORKFLOW.md](./AI-ISSUE-WORKFLOW.md)。插件硬约束见 [AGENTS.md](./AGENTS.md)。
