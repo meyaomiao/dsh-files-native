@@ -11,6 +11,12 @@
 
 </div>
 
+## 🤝 合作伙伴：米云
+
+<a href="https://momotoken.win"><img src="docs/assets/miyun-banner.png" alt="米云 MIYUN · 多模型 AI API 聚合平台 momotoken.win" width="760"></a>
+
+**[米云 MIYUN](https://momotoken.win)** —— 多模型 AI API 聚合平台：稳定不降智，模型上线快又多；统一 API 接入、按量使用、余额集中管理。
+
 ## ⭐ 欢迎点星收藏
 
 如果附件轨帮到了你，欢迎到 [GitHub 仓库](https://github.com/meyaomiao/dsh-files-native) 点个 Star ⭐，让更多 DSH 用户看到它。问题与建议请提 Issue。
